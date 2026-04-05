@@ -15,11 +15,22 @@ body {
   justify-content:center;
   align-items:center;
   height:100vh;
+  overflow:hidden;
 }
 
-.light { background:#f1f5f9; color:black; }
+/* AKASH watermark */
+body::before {
+  content: "AKASH";
+  position: absolute;
+  font-size: 80px;
+  color: rgba(255,255,255,0.05);
+  transform: rotate(-30deg);
+  z-index: 0;
+}
 
 .box {
+  position: relative;
+  z-index: 1;
   background:#111827;
   padding:20px;
   border-radius:15px;
@@ -40,10 +51,11 @@ input,button {
 button {
   background:#22c55e;
   color:white;
+  cursor:pointer;
 }
 
 #messages {
-  height:260px;
+  height:250px;
   overflow-y:auto;
   background:#020617;
   padding:10px;
@@ -77,60 +89,45 @@ button {
 <input id="room" placeholder="Secret Code">
 
 <button onclick="startChat()">Start</button>
-<button onclick="toggleMode()">🌙/☀️</button>
-
-<h3 id="roomName"></h3>
-<p id="online">Online: 1</p>
-<p id="count">Messages: 0</p>
-<p id="typing"></p>
 
 <div id="chatBox">
 <div id="messages"></div>
 
-<input id="msgInput" placeholder="Type message 😄">
+<input id="msgInput" placeholder="Type message">
 <button onclick="sendMsg()">Send</button>
 <button onclick="clearChat()">🗑 Clear</button>
 </div>
 </div>
 
-<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+// 🔴 APNA FIREBASE CONFIG YAHA DAALO
 const firebaseConfig = {
-  apiKey: "PASTE",
-  authDomain: "PASTE",
-  databaseURL: "PASTE",
-  projectId: "PASTE"
+  apiKey: "AIzaSyDUA-coxrYBEYlSfWq3eD4pFMSuA6Gqcqk",
+  authDomain: "nation-3581d.firebaseapp.com",
+  databaseURL: "https://nation-3581d-default-rtdb.firebaseio.com",
+  projectId: "nation-3581d",
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let username="", room="", count=0;
-
-// auto fill name
-window.onload = ()=>{
-  let saved = localStorage.getItem("nation_name");
-  if(saved) document.getElementById("name").value=saved;
-};
+let username="", room="";
 
 window.startChat = function(){
-  username = name.value;
+  username = document.getElementById("name").value;
   room = document.getElementById("room").value;
 
-  if(!username || !room) return alert("Enter details!");
-
-  localStorage.setItem("nation_name", username);
+  if(!username || !room){
+    alert("Enter name and code");
+    return;
+  }
 
   document.getElementById("chatBox").style.display="block";
-  document.getElementById("roomName").innerText="Room: "+room;
 
   const chatRef = ref(db,"rooms/"+room);
-
-  push(chatRef,"🎉 "+username+" joined");
 
   onChildAdded(chatRef,(data)=>{
     let div=document.createElement("div");
@@ -150,25 +147,9 @@ window.startChat = function(){
       div.classList.add("me");
     } else {
       div.classList.add("other");
-      document.getElementById("sound").play();
     }
 
-    // copy click
-    div.onclick=()=>{
-      navigator.clipboard.writeText(data.val());
-      alert("Copied!");
-    };
-
-    // double click delete
-    div.ondblclick=()=>{
-      if(data.val().startsWith(username)) div.remove();
-    };
-
     messages.appendChild(div);
-
-    count++;
-    document.getElementById("count").innerText="Messages: "+count;
-
     messages.scrollTop=messages.scrollHeight;
   });
 };
@@ -186,25 +167,10 @@ window.clearChat=function(){
   messages.innerHTML="";
 };
 
-window.toggleMode=function(){
-  document.body.classList.toggle("light");
-};
-
-// typing
-msgInput.addEventListener("input",()=>{
-  document.getElementById("typing").innerText=username+" typing...";
-  setTimeout(()=>{ document.getElementById("typing").innerText=""; },1000);
-});
-
 // enter send
 msgInput.addEventListener("keypress",e=>{
   if(e.key==="Enter") sendMsg();
 });
-
-// fake online
-setInterval(()=>{
-  document.getElementById("online").innerText="Online: "+(Math.floor(Math.random()*5)+1);
-},3000);
 </script>
 
 </body>
