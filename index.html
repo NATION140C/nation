@@ -20,12 +20,15 @@ body {
 
 /* AKASH watermark */
 body::before {
-  content: "AKASH";
+  content: "AKASH AKASH AKASH AKASH";
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
   font-size: 80px;
   color: rgba(255,255,255,0.05);
-  transform: rotate(-30deg);
-  z-index: 0;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .box {
