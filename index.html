@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>NATION</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .box {
+      background: #111827;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      width: 300px;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+    }
+
+    button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background: green;
+      color: white;
+    }
+
+    #chatBox {
+      display: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h1>🌍 NATION</h1>
+
+  <input id="name" placeholder="Your Name"><br>
+  <input id="room" placeholder="Secret Code"><br>
+
+  <button onclick="startChat()">Start</button>
+
+  <div id="chatBox">
+    <div id="messages"></div>
+
+    <input id="msgInput" placeholder="Type message">
+    <button onclick="sendMsg()">Send</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// 🔴 APNA FIREBASE CONFIG YAHA DAALO
+const firebaseConfig = {
+  apiKey: "AIzaSyDUA-coxrYBEYlSfWq3eD4pFMSuA6Gqcqk",
+  authDomain: "nation-3581d.firebaseapp.com",
+  databaseURL: "https://nation-3581d-default-rtdb.firebaseio.com",
+  projectId: "nation-3581d",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let username = "";
+let room = "";
+
+window.startChat = function() {
+  username = document.getElementById("name").value;
+  room = document.getElementById("room").value;
+
+  document.getElementById("chatBox").style.display = "block";
+
+  const chatRef = ref(db, "rooms/" + room);
+
+  onChildAdded(chatRef, (data) => {
+    let msg = document.createElement("p");
+    msg.innerText = data.val();
+    document.getElementById("messages").appendChild(msg);
+  });
+};
+
+window.sendMsg = function() {
+  let msg = document.getElementById("msgInput").value;
+
+  const chatRef = ref(db, "rooms/" + room);
+  push(chatRef, username + ": " + msg);
+
+  document.getElementById("msgInput").value = "";
+};
+</script>
+
+</body>
+</html>
