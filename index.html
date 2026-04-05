@@ -1,111 +1,210 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>NATION</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NATION</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
 
-    .box {
-      background: #111827;
-      padding: 30px;
-      border-radius: 15px;
-      text-align: center;
-      width: 300px;
-    }
+.light { background:#f1f5f9; color:black; }
 
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: none;
-    }
+.box {
+  background:#111827;
+  padding:20px;
+  border-radius:15px;
+  width:90%;
+  max-width:380px;
+  text-align:center;
+}
 
-    button {
-      padding: 10px 20px;
-      border-radius: 8px;
-      border: none;
-      background: green;
-      color: white;
-    }
+input,button {
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
+}
 
-    #chatBox {
-      display: none;
-      margin-top: 20px;
-    }
-  </style>
+button {
+  background:#22c55e;
+  color:white;
+}
+
+#messages {
+  height:260px;
+  overflow-y:auto;
+  background:#020617;
+  padding:10px;
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+}
+
+.message {
+  padding:8px;
+  margin:5px 0;
+  border-radius:10px;
+  max-width:75%;
+}
+
+.me { background:#22c55e; align-self:flex-end; }
+.other { background:#374151; align-self:flex-start; }
+
+.time { font-size:10px; opacity:0.7; }
+
+#chatBox { display:none; }
+</style>
 </head>
 
 <body>
 
 <div class="box">
-  <h1>🌍 NATION</h1>
+<h2>🌍 NATION</h2>
 
-  <input id="name" placeholder="Your Name"><br>
-  <input id="room" placeholder="Secret Code"><br>
+<input id="name" placeholder="Your Name">
+<input id="room" placeholder="Secret Code">
 
-  <button onclick="startChat()">Start</button>
+<button onclick="startChat()">Start</button>
+<button onclick="toggleMode()">🌙/☀️</button>
 
-  <div id="chatBox">
-    <div id="messages"></div>
+<h3 id="roomName"></h3>
+<p id="online">Online: 1</p>
+<p id="count">Messages: 0</p>
+<p id="typing"></p>
 
-    <input id="msgInput" placeholder="Type message">
-    <button onclick="sendMsg()">Send</button>
-  </div>
+<div id="chatBox">
+<div id="messages"></div>
+
+<input id="msgInput" placeholder="Type message 😄">
+<button onclick="sendMsg()">Send</button>
+<button onclick="clearChat()">🗑 Clear</button>
 </div>
+</div>
+
+<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, push, onChildAdded, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// 🔴 APNA FIREBASE CONFIG YAHA DAALO
 const firebaseConfig = {
-  apiKey: "AIzaSyDUA-coxrYBEYlSfWq3eD4pFMSuA6Gqcqk",
-  authDomain: "nation-3581d.firebaseapp.com",
-  databaseURL: "https://nation-3581d-default-rtdb.firebaseio.com",
-  projectId: "nation-3581d",
+  apiKey: "PASTE",
+  authDomain: "PASTE",
+  databaseURL: "PASTE",
+  projectId: "PASTE"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let username = "";
-let room = "";
+let username="", room="", count=0;
 
-window.startChat = function() {
-  username = document.getElementById("name").value;
+// auto fill name
+window.onload = ()=>{
+  let saved = localStorage.getItem("nation_name");
+  if(saved) document.getElementById("name").value=saved;
+};
+
+window.startChat = function(){
+  username = name.value;
   room = document.getElementById("room").value;
 
-  document.getElementById("chatBox").style.display = "block";
+  if(!username || !room) return alert("Enter details!");
 
-  const chatRef = ref(db, "rooms/" + room);
+  localStorage.setItem("nation_name", username);
 
-  onChildAdded(chatRef, (data) => {
-    let msg = document.createElement("p");
-    msg.innerText = data.val();
-    document.getElementById("messages").appendChild(msg);
+  document.getElementById("chatBox").style.display="block";
+  document.getElementById("roomName").innerText="Room: "+room;
+
+  const chatRef = ref(db,"rooms/"+room);
+
+  push(chatRef,"🎉 "+username+" joined");
+
+  onChildAdded(chatRef,(data)=>{
+    let div=document.createElement("div");
+    div.classList.add("message");
+
+    let text=document.createElement("div");
+    text.innerText=data.val();
+
+    let time=document.createElement("div");
+    time.className="time";
+    time.innerText=new Date().toLocaleTimeString();
+
+    div.appendChild(text);
+    div.appendChild(time);
+
+    if(data.val().startsWith(username)){
+      div.classList.add("me");
+    } else {
+      div.classList.add("other");
+      document.getElementById("sound").play();
+    }
+
+    // copy click
+    div.onclick=()=>{
+      navigator.clipboard.writeText(data.val());
+      alert("Copied!");
+    };
+
+    // double click delete
+    div.ondblclick=()=>{
+      if(data.val().startsWith(username)) div.remove();
+    };
+
+    messages.appendChild(div);
+
+    count++;
+    document.getElementById("count").innerText="Messages: "+count;
+
+    messages.scrollTop=messages.scrollHeight;
   });
 };
 
-window.sendMsg = function() {
-  let msg = document.getElementById("msgInput").value;
+window.sendMsg=function(){
+  let msg=msgInput.value;
+  if(!msg) return;
 
-  const chatRef = ref(db, "rooms/" + room);
-  push(chatRef, username + ": " + msg);
-
-  document.getElementById("msgInput").value = "";
+  push(ref(db,"rooms/"+room), username+": "+msg);
+  msgInput.value="";
 };
+
+window.clearChat=function(){
+  remove(ref(db,"rooms/"+room));
+  messages.innerHTML="";
+};
+
+window.toggleMode=function(){
+  document.body.classList.toggle("light");
+};
+
+// typing
+msgInput.addEventListener("input",()=>{
+  document.getElementById("typing").innerText=username+" typing...";
+  setTimeout(()=>{ document.getElementById("typing").innerText=""; },1000);
+});
+
+// enter send
+msgInput.addEventListener("keypress",e=>{
+  if(e.key==="Enter") sendMsg();
+});
+
+// fake online
+setInterval(()=>{
+  document.getElementById("online").innerText="Online: "+(Math.floor(Math.random()*5)+1);
+},3000);
 </script>
 
 </body>
